@@ -1,10 +1,10 @@
-import React from "react";
+import React, { Fragment, useState } from "react";
 import { Scoped } from "kremling";
 import TextInput from "../inputs/text-input.component.js";
 import FormThatPrints from "../inputs/form-that-prints.component.js";
 import Section from "../inputs/section.component.js";
-import Radio from "../inputs/radio.component.js";
 import TextArea from "../inputs/text-area.component.js";
+import CheckBox from "../inputs/checkbox.component";
 
 const employerInputs = [
   "NameOfEmployer",
@@ -62,68 +62,76 @@ export default function ApplicationForPardon_Web({ data }) {
         </Section>
 
         <Section name="2. Pardon Request and Consideration">
-          <Radio
-            dataKey="case.previouslyApplied"
-            label={__("previously applied")}
-            options={[
-              {
-                label: "No",
-                value: "no"
-              },
-              {
-                label: "Yes",
-                value: "yes"
-              }
-            ]}
+          <TextArea
+            dataKey="case.explaination" // needs more specific name
+            label={__("previously please explain")}
           />
-
-          <p className="web-form-input">
-            If yes, please provide the date of the application, the outcome of
-            the application, list any conviction(s) pardoned, and attach a copy
-            of the application and the Pardon Certificate.
-          </p>
-          {data.person.previouslyApplied && (
-            <TextArea
-              dataKey="case.explaination" // needs more specific name
-              label={__("previously please explain")}
-            />
-          )}
         </Section>
+
         <Section name="3. Family Information">
           <p className="web-form-input">
             If married, please provide the following information for your spouse
           </p>
-          <TextInput
-            dataKey="person.spouseFirstName"
-            label={__("first name spouse")}
+          <CheckBox
+            dataKey="case.maritalStatus"
+            label="I am married"
+            name="maritalStatus"
           />
-          <TextInput
-            dataKey="person.spouseMiddleName"
-            label={__("middle name spouse")}
+          <CheckBox
+            dataKey="case.haveChildren"
+            label="I have children"
+            name="children"
           />
-          <TextInput
-            dataKey="person.spouseLastName"
-            label={__("last name spouse")}
-          />
-          <TextInput
-            dataKey="person.spouseAddressStreet"
-            label={__("street")}
-          />
-          <TextInput dataKey="person.spouseAddressCity" label={__("city")} />
-          <TextInput dataKey="person.spouseAddressState" label={__("state")} />
-          <TextInput dataKey="person.spouseAddressZip" label={__("zip")} />
-          <TextInput
-            dataKey="person.spouseHomePhone"
-            label={__("home phone")}
-          />
-          <TextInput dataKey="person.spouseDayPhone" label={__("day phone")} />
-          <TextInput dataKey="person.spousEemail" label={__("email address")} />
-          // children
-          <TextInput dataKey="person.child1" label={__("Child #1")} />
-          <TextInput dataKey="person.child2" label={__("Child #2")} />
-          <TextInput dataKey="person.child3" label={__("Child #3")} />
-          <TextInput dataKey="person.child4" label={__("Child #4")} />
-          <TextInput dataKey="person.child5" label={__("Child #5")} />
+          {data.case.maritalStatus && (
+            <>
+              <TextInput
+                dataKey="person.spouseFirstName"
+                label={__("first name spouse")}
+              />
+              <TextInput
+                dataKey="person.spouseMiddleName"
+                label={__("middle name spouse")}
+              />
+              <TextInput
+                dataKey="person.spouseLastName"
+                label={__("last name spouse")}
+              />
+              <TextInput
+                dataKey="person.spouseAddressStreet"
+                label={__("street")}
+              />
+              <TextInput
+                dataKey="person.spouseAddressCity"
+                label={__("city")}
+              />
+              <TextInput
+                dataKey="person.spouseAddressState"
+                label={__("state")}
+              />
+              <TextInput dataKey="person.spouseAddressZip" label={__("zip")} />
+              <TextInput
+                dataKey="person.spouseHomePhone"
+                label={__("home phone")}
+              />
+              <TextInput
+                dataKey="person.spouseDayPhone"
+                label={__("day phone")}
+              />
+              <TextInput
+                dataKey="person.spousEemail"
+                label={__("email address")}
+              />
+            </>
+          )}
+          {data.case.haveChildren && (
+            <>
+              <TextInput dataKey="person.child1" label="Child #1" />
+              <TextInput dataKey="person.child2" label="Child #2" />
+              <TextInput dataKey="person.child3" label="Child #3" />
+              <TextInput dataKey="person.child4" label="Child #4" />
+              <TextInput dataKey="person.child5" label="Child #5" />
+            </>
+          )}
         </Section>
 
         <Section name="4. Employment History">
@@ -247,7 +255,7 @@ export default function ApplicationForPardon_Web({ data }) {
           <TextInput dataKey="case.dateOfDenial" label="Date of Denial" />
           <TextInput
             dataKey="case.reasonsForDenial"
-            label="Reason(s) Given For Denail"
+            label="Reason(s) Given For Denial"
           />
         </Section>
 
@@ -256,7 +264,9 @@ export default function ApplicationForPardon_Web({ data }) {
             If you have ever served in the United States Military, Reserves, or
             National Guard, please provide the following information.
           </p>
-          // References fields
+          <TextInput dataKey="case.reference1" label="Reference #1" />
+          <TextInput dataKey="case.reference2" label="Reference #2" />
+          <TextInput dataKey="case.reference3" label="Reference #3" />
         </Section>
 
         <Section name="8. Convictions Sought To Be Pardoned">
@@ -274,7 +284,7 @@ export default function ApplicationForPardon_Web({ data }) {
             application. Please be aware that the Board will not consider a
             pardon of Class C Misdemeanors or Infractions.
           </p>
-          // Convictions Sought To Be Pardoned fields
+          <ConvictionsSoughtToBePardoned />
         </Section>
 
         <Section name="9. Other Arrests or Convictions">
@@ -367,3 +377,89 @@ export default function ApplicationForPardon_Web({ data }) {
 
 const css = `
 `;
+
+function ConvictionsSoughtToBePardoned() {
+  const [count, setCount] = useState(() => 1);
+  let convictions = [];
+
+  function setConvictionCount(e) {
+    e.preventDefault();
+    setCount(prevState => prevState + 1);
+  }
+
+  for (let i = 1; i <= count; i++) {
+    convictions.push(
+      <Fragment key={i}>
+        <p className="web-form-imput">Conviction #{i}</p>
+        <TextInput dataKey={`case.reference${i}`} label="Crime of Conviction" />
+        <TextInput dataKey={`case.reference${i}`} label="Date of Offense" />
+        <TextInput
+          dataKey={`case.cityCountyOfOccurance${i}`}
+          label="City/County Of Occurrence"
+        />
+
+        <TextInput dataKey={`case.courtCaseNumber${i}`} label="Court Case #" />
+        <TextInput
+          dataKey={`case.courtOfConviction${i}`}
+          label="Court Of Conviction"
+        />
+        <TextInput
+          dataKey={`case.dateOfConviction${i}`}
+          label="Date of Conviction"
+        />
+
+        <TextInput
+          dataKey={`case.sentencingJudge${i}`}
+          label="Sentencing Judge"
+        />
+        <TextInput
+          dataKey={`case.defenseAttorney${i}`}
+          label="Defense Attorney"
+        />
+        <TextInput
+          dataKey={`case.prosecuingAttorney${i}`}
+          label="Prosecuting Attorney"
+        />
+
+        <TextInput dataKey={`case.victimsNames${i}`} label="Victim(s) Names" />
+        <TextInput
+          dataKey={`case.sentenceImposed${i}`}
+          label="Sentence Imposed"
+        />
+        <TextInput
+          dataKey={`case.placeOfIncarceration${i}`}
+          label="Place of Incarceration"
+        />
+
+        <TextInput
+          dataKey={`case.datesOfIncarceration${i}`}
+          label="Dates of Incarceration"
+        />
+        <p className="web-form-imput">
+          Please list all restitution, fines, fees, or surcharges imposed or
+          ordered. Submit verification that all restitution, fines, fees, or
+          surcharges have been paid or remitted.
+        </p>
+        <TextArea dataKey={`case.restitutions${i}`} />
+
+        <p className="web-form-imput">
+          Please describe and explain this offense, your conduct, and any plea
+          agreement entered.
+        </p>
+        <TextArea dataKey={`case.explainationOfOffense${i}`} />
+        <br />
+      </Fragment>
+    );
+  }
+
+  return (
+    <>
+      {convictions}
+      {count < 4 && (
+        <button className="secondary" onClick={setConvictionCount}>
+          Add Another Conviction
+        </button>
+      )}
+    </>
+  );
+}
